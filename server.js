@@ -7,6 +7,9 @@ const port = process.env.PORT || 5001;
 
 connectDB();
 
+// Middleware pour parser JSON
+app.use(express.json());
+
 app.get('/', (req, res) => {
     res.send('Hello World !');
 });
