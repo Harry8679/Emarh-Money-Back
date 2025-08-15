@@ -10,7 +10,7 @@ const app = express();
 
 app.use(express.json());
 
-app.use("/api/auth", authRoutes);
+app.use("/api/v1/auth", authRoutes);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`🚀 Serveur démarré sur le port ${port}`));
