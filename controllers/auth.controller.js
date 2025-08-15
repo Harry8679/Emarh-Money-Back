@@ -10,28 +10,36 @@ const generateToken = (id) => {
 // @desc Inscription
 // @route POST /api/auth/register
 exports.registerUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body;
 
   try {
-    if (!email || !password) {
+    // Vérification des champs
+    if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ message: "Tous les champs sont requis" });
     }
 
+    // Vérification si l'email existe déjà
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "Cet email est déjà utilisé" });
     }
 
+    // Hachage du mot de passe
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Création de l'utilisateur
     const user = await User.create({
+      firstName,
+      lastName,
       email,
       password: hashedPassword,
     });
 
     res.status(201).json({
       _id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       token: generateToken(user.id),
     });
@@ -62,6 +70,8 @@ exports.loginUser = async (req, res) => {
 
     res.json({
       _id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       token: generateToken(user.id),
     });
