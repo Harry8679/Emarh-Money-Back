@@ -9,7 +9,7 @@ const app = express();
 
 app.use(express.json());
 
-app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/auth", require("./routes/auth.route"));
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`🚀 Serveur démarré sur le port ${port}`));
