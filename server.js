@@ -11,7 +11,7 @@ const app = express();
 
 // ✅ Middleware CORS
 app.use(cors({
-  origin: "http://localhost:3000", // URL de ton frontend (Vite)
+  origin: "http://localhost:3000", // URL de ton frontend (React App)
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type,Authorization"
 }));
