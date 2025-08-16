@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { protect } = require('../middlewares/auth.middleware');
+// const { protect } = require('../middlewares/auth.middleware');
 const {
   createTransaction,
   getTransactions,
@@ -10,6 +10,7 @@ const {
   updateTransaction,
   deleteTransaction,
 } = require("../controllers/transaction.controller");
+const protect = require("../middlewares/auth.middleware");
 
 // Toutes les routes ci-dessous nécessitent un utilisateur connecté
 router.use(protect);
