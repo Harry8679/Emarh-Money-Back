@@ -1,28 +1,26 @@
-// routes/transaction.routes.js
 const express = require("express");
 const router = express.Router();
-
-// const { protect } = require('../middlewares/auth.middleware');
+const { protect } = require("../middleware/auth");
 const {
   createTransaction,
   getTransactions,
   getTransactionById,
   updateTransaction,
   deleteTransaction,
+  getTransactionsSummary, // ⬅️ nouveau
 } = require("../controllers/transaction.controller");
-const protect = require("../middlewares/auth.middleware");
 
-// Toutes les routes ci-dessous nécessitent un utilisateur connecté
 router.use(protect);
 
-// CRUD
+router.get("/summary", getTransactionsSummary); // ⬅️ NOUVEAU
+
 router.route("/")
-  .post(createTransaction)  // CREATE
-  .get(getTransactions);    // READ (list)
+  .post(createTransaction)
+  .get(getTransactions);
 
 router.route("/:id")
-  .get(getTransactionById)  // READ (one)
-  .put(updateTransaction)   // UPDATE
-  .delete(deleteTransaction); // DELETE
+  .get(getTransactionById)
+  .put(updateTransaction)
+  .delete(deleteTransaction);
 
 module.exports = router;
