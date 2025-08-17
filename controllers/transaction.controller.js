@@ -175,3 +175,95 @@ exports.deleteTransaction = async (req, res) => {
     return res.status(400).json({ message: "ID invalide" });
   }
 };
+
+// ⬇️ NOUVEAU: résumé agrégé (total, counts, montants, catégories)
+exports.getTransactionsSummary = async (req, res) => {
+  try {
+    const { type, category, startDate, endDate, freq } = req.query;
+
+    // même logique de filtre que getTransactions, mais SANS pagination
+    const filter = { user: req.user.id };
+    if (type && type !== "all") filter.type = type;         // "entree" | "sortie"
+    if (category) filter.category = category;
+
+    if (freq) {
+      const now = new Date();
+      const from = new Date();
+      if (freq === "7j") from.setDate(now.getDate() - 7);
+      else if (freq === "30j") from.setMonth(now.getMonth() - 1);
+      else if (freq === "365j") from.setFullYear(now.getFullYear() - 1);
+      filter.date = { $gte: from, $lte: now };
+    } else if (startDate || endDate) {
+      const from = startDate ? parseDate(startDate) : null;
+      const to = endDate ? parseDate(endDate) : null;
+      if (from || to) {
+        filter.date = {};
+        if (from) filter.date.$gte = from;
+        if (to) filter.date.$lte = to;
+      }
+    }
+
+    // Agrégations
+    const [base, catEntree, catSortie] = await Promise.all([
+      Transaction.aggregate([
+        { $match: filter },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            revenusCount: { $sum: { $cond: [{ $eq: ["$type", "entree"] }, 1, 0] } },
+            depensesCount: { $sum: { $cond: [{ $eq: ["$type", "sortie"] }, 1, 0] } },
+            revenus: { $sum: { $cond: [{ $eq: ["$type", "entree"] }, "$montant", 0] } },
+            depenses: { $sum: { $cond: [{ $eq: ["$type", "sortie"] }, "$montant", 0] } },
+          },
+        },
+      ]),
+      Transaction.aggregate([
+        { $match: { ...filter, type: "entree" } },
+        { $group: { _id: "$category", amount: { $sum: "$montant" } } },
+        { $sort: { amount: -1 } },
+      ]),
+      Transaction.aggregate([
+        { $match: { ...filter, type: "sortie" } },
+        { $group: { _id: "$category", amount: { $sum: "$montant" } } },
+        { $sort: { amount: -1 } },
+      ]),
+    ]);
+
+    const b = base[0] || {
+      total: 0,
+      revenusCount: 0,
+      depensesCount: 0,
+      revenus: 0,
+      depenses: 0,
+    };
+    const totalMontant = (b.revenus || 0) + (b.depenses || 0);
+
+    const categoriesRevenus = catEntree.map((c) => ({
+      nom: c._id || "autre",
+      montant: c.amount,
+      pourcentage: b.revenus > 0 ? Math.round((c.amount / b.revenus) * 100) : 0,
+    }));
+
+    const categoriesDepenses = catSortie.map((c) => ({
+      nom: c._id || "autre",
+      montant: c.amount,
+      pourcentage: b.depenses > 0 ? Math.round((c.amount / b.depenses) * 100) : 0,
+    }));
+
+    return res.json({
+      success: true,
+      total: b.total,
+      revenusCount: b.revenusCount,
+      depensesCount: b.depensesCount,
+      revenus: b.revenus,
+      depenses: b.depenses,
+      totalMontant,
+      categoriesRevenus,
+      categoriesDepenses,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
+};
