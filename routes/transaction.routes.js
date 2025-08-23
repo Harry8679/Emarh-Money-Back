@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const protect = require("../middlewares/auth.middleware");
 const {
   createTransaction,
   getTransactions,
@@ -8,7 +9,6 @@ const {
   deleteTransaction,
   getTransactionsSummary, // ⬅️ nouveau
 } = require("../controllers/transaction.controller");
-const protect = require("../middlewares/auth.middleware");
 
 router.use(protect);
 
