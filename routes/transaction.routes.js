@@ -1,13 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middlewares/auth.middleware");
-const {
-  createTransaction,
-  getTransactions,
-  getTransactionById,
-  updateTransaction,
-  deleteTransaction,
-  getTransactionsSummary, // ⬅️ nouveau
+const { createTransaction, getTransactions, getTransactionById, updateTransaction, deleteTransaction, getTransactionsSummary, // ⬅️ nouveau
 } = require("../controllers/transaction.controller");
 
 router.use(protect);
